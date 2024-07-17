@@ -1,0 +1,39 @@
+name: 'Docker Pull Image from GAR'
+description: 'Pulls a Docker image from Google Artifact Registry'
+inputs:
+  gcloud_service_key:
+    description: 'The GCP service account key in base64 encoded JSON'
+    required: true
+  project_id:
+    description: 'The GCP project ID'
+    required: true
+  registry:
+    description: 'The GAR registry location'
+    required: true
+  repository:
+    description: 'The GAR repository name'
+    required: true
+  image_name:
+    description: 'The name of the Docker image'
+    required: true
+  image_tags:
+    description: 'Comma-separated list of tags for the Docker image'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ inputs.gcloud_service_key }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Configure Docker Client for Gcloud
+      run: gcloud auth configure-docker ${{ inputs.registry }} --quiet
+      shell: bash
+
+    - name: Pull Docker Image from GAR
+      run: docker pull ${{ inputs.registry }}/${{ inputs.project_id }}/${{ inputs.repository }}/${{ inputs.image_name }}:${{ inputs.image_tags }}
+      shell: bash
